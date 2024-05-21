@@ -8,6 +8,7 @@ import pygame as pg
 
 WIDTH, HEIGHT = 1600, 900  # ゲームウィンドウの幅，高さ
 os.chdir(os.path.dirname(os.path.abspath(__file__)))
+FLG_Hard=True  #ハードモードフラグ
 
 def check_bound(obj_rct:pg.Rect) -> tuple[bool, bool]:
     """
@@ -360,6 +361,7 @@ class Sheeld(pg.sprite.Sprite):
         
 
 def main():
+    global FLG_Hard #ハードモードフラグへのアクセス
     pg.display.set_caption("真！こうかとん無双")
     screen = pg.display.set_mode((WIDTH, HEIGHT))
     bg_img = pg.image.load(f"fig/pg_bg.jpg")
@@ -413,11 +415,16 @@ def main():
 
         if tmr%100 == 0:  # 200フレームに1回，敵機を出現させる
             emys.add(Enemy())
-        if tmr%1200 == 0 and Boss_count != 0:    # 1200フレームに１回、ボスを出現させる。さらに0フレーム時にボスを出現させないようにする
-            Boss_count += 0
-            bosses.add(BossEnemy())
-        elif Boss_count == 0:
-            Boss_count += 1
+        if FLG_Hard or tmr > 20000: #ハードモードか20000フレーム経過したら
+            if tmr%200 == 0:    #ボスの出現率を早くする
+                bosses.add(BossEnemy())
+                Boss_count += 1    
+        else:
+            if tmr%1200 == 0 and Boss_count != 0:    # 1200フレームに１回、ボスを出現させる。さらに0フレーム時にボスを出現させないようにする
+                Boss_count += 0
+                bosses.add(BossEnemy())
+            elif Boss_count == 0:
+                Boss_count += 1
 
         for emy in emys:
             if emy.state == "stop" and tmr%emy.interval == 0:
@@ -450,7 +457,7 @@ def main():
             exps.add(Explosion(bomb, 50))
             score.value += 1
 
-        
+        print(tmr)
         
         # Cボタンを押すとシールドを展開
         #if key_lst[pg.K_c] & score.value >= 50:
