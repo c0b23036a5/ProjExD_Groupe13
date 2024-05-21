@@ -216,6 +216,8 @@ class Beam(pg.sprite.Sprite):
         self.rect.move_ip(self.speed*self.vx, self.speed*self.vy)
         if check_bound(self.rect) != (True, True):
             self.kill()
+        pg.mixer.Sound("fig/audio/ビーム発射音.mp3").play()
+        
 
 '''
 Beamを複数つくる弾幕クラス
@@ -258,6 +260,8 @@ class Explosion(pg.sprite.Sprite):
         self.image = self.imgs[self.life//10%2]
         if self.life < 0:
             self.kill()
+
+        pg.mixer.Sound("fig/audio/爆発4.mp3").play()
 
 
 class Enemy(pg.sprite.Sprite):
@@ -378,7 +382,6 @@ def main():
     score = Score()
     #neobeam = NeoBeam 
     #score.value =900000000
-
 
     bird = Bird(3, (900, 400))
     bombs = pg.sprite.Group()
