@@ -232,7 +232,7 @@ class Enemy(pg.sprite.Sprite):
         self.image = random.choice(__class__.imgs)
         self.rect = self.image.get_rect()
         self.rect.center = random.randint(0, WIDTH), 0
-        self.vy = +6
+        self.vy = random.randint(6,15)
         #self.bound = random.randint(50, int(HEIGHT/2))  # 停止位置
         self.bound = random.randint(50, int(HEIGHT/2))  # 停止位置
         self.state = "down"  # 降下状態or停止状態
@@ -411,7 +411,7 @@ def main():
         else:
             bird.speed = 10
 
-        if tmr%200 == 0:  # 200フレームに1回，敵機を出現させる
+        if tmr%100 == 0:  # 200フレームに1回，敵機を出現させる
             emys.add(Enemy())
         if tmr%1200 == 0 and Boss_count != 0:    # 1200フレームに１回、ボスを出現させる。さらに0フレーム時にボスを出現させないようにする
             Boss_count += 0
