@@ -10,7 +10,13 @@ WIDTH, HEIGHT = 1600, 900  # ゲームウィンドウの幅，高さ
 os.chdir(os.path.dirname(os.path.abspath(__file__)))
 
 def m_play1():
-    #通常BGM
+    """
+    炎の挑戦：通常時流すBGM
+    load:音楽ファイルの読み込み
+    play:ループ再生
+    """
+
+     
     pg.mixer.init()
     pg.mixer.music.load("fig/audio/炎の挑戦.mp3")
     pg.mixer.music.play(-1)
