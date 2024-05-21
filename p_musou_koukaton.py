@@ -134,10 +134,10 @@ class Life(pg.sprite.Sprite):
                 screen.blit(self.life_image, (10 + i * (self.life_image.get_width() + 10), 10))
             else:
                 screen.blit(self.lost_life_image, (10 + i * (self.life_image.get_width() + 10), 10))
-
+    """
     def huzake(self, screen: pg.Surface): #こうかとんのカットインを表示する関数
         screen.blit(self.neta_life, (-300, 0))
-    
+    """
 
 
 class Bomb(pg.sprite.Sprite):
@@ -465,8 +465,10 @@ def main():
             else:
                 touch_bomb[0].kill()    
                 bird.change_img(8, screen) # こうかとん悲しみエフェクト
+                """
                 if life.lives != 1: #こうかとんの被弾カットインの条件：残りライフが１ではないとき
                     life.huzake(screen) #被弾カットイン表示関数実行
+                """
                 score.update(screen)
                 pg.display.update()
                 time.sleep(0.4)
