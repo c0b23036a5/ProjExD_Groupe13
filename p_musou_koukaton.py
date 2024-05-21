@@ -5,6 +5,10 @@ import sys
 import time
 import pygame as pg
 
+import json
+import time
+
+
 
 WIDTH, HEIGHT = 1600, 900  # ゲームウィンドウの幅，高さ
 os.chdir(os.path.dirname(os.path.abspath(__file__)))
@@ -330,7 +334,6 @@ class Sheeld(pg.sprite.Sprite):
 
 def main():
 
-
     pg.display.set_caption("真！こうかとん無双")
     screen = pg.display.set_mode((WIDTH, HEIGHT))
     bg_img = pg.image.load(f"fig/pg_bg.jpg")
@@ -436,7 +439,38 @@ def main():
                 bird.change_img(8, screen) # こうかとん悲しみエフェクト
                 score.update(screen)
                 pg.display.update()
-                time.sleep(2)
+                time.sleep(1)
+
+                #ゲーむオーバー画面を実装
+                screen.fill((0, 0, 0))
+                font = pg.font.Font(None, 100)
+                text = font.render("Game Over", True, (255, 255, 255))
+                screen.blit(text, (WIDTH/2-200, HEIGHT/2-50))
+
+                #score.jsonを読み込み　hi_scoreよりscore.valueが大きい場合はhi_scoreを更新
+                with open("score.json", "r") as f:
+                    hi_score = json.load(f)
+                    if hi_score["hi-score"] < score.value:
+                        with open("score.json", "w") as f:
+                            hi_score["hi-score"] = score.value
+                            json.dump(hi_score, f)
+                            print("hi_scoreを更新しました")
+                            #ハイスコアの更新をお知らせ
+                            font = pg.font.Font(None, 50)
+                            text2 = font.render(f"New High Score!  Score:{hi_score['hi-score']}", True, (255, 255, 255))
+                            screen.blit(text2, (WIDTH/2-200, HEIGHT/2+50))
+                            pg.display.update()
+                            time.sleep(5)
+
+                    else:
+                        print("hi_scoreを更新しませんでした")
+                        #ハイスコアを表示する。
+                        font = pg.font.Font(None, 50)
+                        text3 = font.render(f"Hi-Score: {hi_score['hi-score']}  Your-Score: {score.value}", True, (255, 255, 255))
+                        screen.blit(text3, (WIDTH/2-200, HEIGHT/2+50))
+                        pg.display.update()
+                        time.sleep(5)
+
                 return
 
         bird.update(key_lst, screen)
