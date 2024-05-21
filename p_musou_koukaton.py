@@ -8,6 +8,10 @@ import pygame as pg
 import json
 import time
 
+import firebase_admin
+from firebase_admin import credentials
+from firebase_admin import firestore
+
 
 
 WIDTH, HEIGHT = 1600, 900  # ゲームウィンドウの幅，高さ
@@ -330,9 +334,34 @@ class Sheeld(pg.sprite.Sprite):
             self.kill()
         
 
-        
+def get_cloud_hi_score(cred):
+    db = firestore.client()
+    doc_ref = db.collection('score').get()
+    #print(doc_ref)
+    return int(doc_ref[0].to_dict()['score'])
+
+def firebase_upload(cred, score,name):
+    db = firestore.client()
+    doc_ref = db.collection('score').document("hi_score")
+
+    #すでに存在しているドキュメントを削除
+    db.collection("score").document("hi_score").delete()
+    doc_ref.set({
+        'score': score,
+        'user': name
+    })
+    print("アップロードしました")
+
+
+    
 
 def main():
+
+
+    #firebaseの初期化
+    cred = credentials.Certificate("firebase.json")
+    firebase_admin.initialize_app(cred)
+
 
     pg.display.set_caption("真！こうかとん無双")
     screen = pg.display.set_mode((WIDTH, HEIGHT))
@@ -450,14 +479,34 @@ def main():
                 #score.jsonを読み込み　hi_scoreよりscore.valueが大きい場合はhi_scoreを更新
                 with open("score.json", "r") as f:
                     hi_score = json.load(f)
-                    if hi_score["hi-score"] < score.value:
-                        with open("score.json", "w") as f:
-                            hi_score["hi-score"] = score.value
+                    world_hi_score = get_cloud_hi_score(cred)
+                    
+
+                    if world_hi_score < score.value:
+                        with open("score.json","w") as f:
+                            hi_score["local-hi-score"] = score.value
+                            hi_score["world-hi-score"] = score.value
                             json.dump(hi_score, f)
                             print("hi_scoreを更新しました")
                             #ハイスコアの更新をお知らせ
                             font = pg.font.Font(None, 50)
-                            text2 = font.render(f"New High Score!  Score:{hi_score['hi-score']}", True, (255, 255, 255))
+                            text2 = font.render(f"This is World Record!  Score:{hi_score['local-hi-score']}", True, (255, 255, 255))
+                            screen.blit(text2, (WIDTH/2-200, HEIGHT/2+50))
+                            pg.display.update()
+                            time.sleep(5)
+
+                            #firebaseにスコアをアップロード
+                            firebase_upload(cred, score.value,hi_score["player-name"])
+
+
+                    elif hi_score["local-hi-score"] < score.value:
+                        with open("score.json", "w") as f:
+                            hi_score["local-hi-score"] = score.value
+                            json.dump(hi_score, f)
+                            print("hi_scoreを更新しました")
+                            #ハイスコアの更新をお知らせ
+                            font = pg.font.Font(None, 50)
+                            text2 = font.render(f"New High Score!  Score:{hi_score['local-hi-score']}", True, (255, 255, 255))
                             screen.blit(text2, (WIDTH/2-200, HEIGHT/2+50))
                             pg.display.update()
                             time.sleep(5)
@@ -466,7 +515,7 @@ def main():
                         print("hi_scoreを更新しませんでした")
                         #ハイスコアを表示する。
                         font = pg.font.Font(None, 50)
-                        text3 = font.render(f"Hi-Score: {hi_score['hi-score']}  Your-Score: {score.value}", True, (255, 255, 255))
+                        text3 = font.render(f"Hi-Score: {hi_score['local-hi-score']}World:{world_hi_score}  Your-Score: {score.value}", True, (255, 255, 255))
                         screen.blit(text3, (WIDTH/2-200, HEIGHT/2+50))
                         pg.display.update()
                         time.sleep(5)
