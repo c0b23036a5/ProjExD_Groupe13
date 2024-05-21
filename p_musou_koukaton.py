@@ -110,6 +110,35 @@ class Bird(pg.sprite.Sprite):
 
         screen.blit(self.image, self.rect)
 
+class Life(pg.sprite.Sprite):
+    """
+    こうかとんの残機に関するクラス
+    """
+    def __init__(self, initial_lives: int):
+        """
+        こうかとん画像Surfaceを生成する
+        引数1 initial_lives：
+        """
+        self.lives = initial_lives #初期ライフというだけ
+        self.life_image = pg.image.load("fig/koukaton_life.png")
+        self.lost_life_image=pg.image.load("fig/lost_life.png")
+        self.neta_life=pg.image.load("fig/koukaton_buti.png")
+
+    def lose_life(self):
+        if self.lives > 0:
+            self.lives -= 1
+    
+    def draw(self, screen: pg.Surface):
+        for i in range(3):
+            if i < self.lives:
+                screen.blit(self.life_image, (10 + i * (self.life_image.get_width() + 10), 10))
+            else:
+                screen.blit(self.lost_life_image, (10 + i * (self.life_image.get_width() + 10), 10))
+
+    def huzake(self, screen: pg.Surface):
+        screen.blit(self.neta_life, (-300, 0))
+    
+
 
 class Bomb(pg.sprite.Sprite):
     """
@@ -142,8 +171,9 @@ class Bomb(pg.sprite.Sprite):
         引数 screen：画面Surface
         """
         self.rect.move_ip(self.speed*self.vx, self.speed*self.vy)
-        if check_bound(self.rect) != (True, True):
+        if check_bound(self.rect) != (True, True) :
             self.kill()
+            
 
 
 class Beam(pg.sprite.Sprite):
@@ -339,6 +369,7 @@ def main():
     #score.value =900000000
 
     bird = Bird(3, (900, 400))
+    life = Life(3)  # こうかとんの残機を3に設定
     bombs = pg.sprite.Group()
     beams = pg.sprite.Group()
     exps = pg.sprite.Group()
@@ -434,9 +465,16 @@ def main():
             else:
                 touch_bomb[0].kill()    
                 bird.change_img(8, screen) # こうかとん悲しみエフェクト
+                
+                if life.lives != 1:
+                    life.huzake(screen)
+                
                 score.update(screen)
                 pg.display.update()
-                time.sleep(2)
+                time.sleep(0.4)
+                life.lose_life() #こうかとんのライフが一つ減る
+            if life.lives == 0: #こうかとんのライフが0ならば
+                time.sleep(2) #2秒待つ
                 return
 
         bird.update(key_lst, screen)
@@ -451,6 +489,7 @@ def main():
         score.update(screen)
         gravity.draw(screen)
         gravity.update()
+        life.draw(screen)  # 残機を画面に表示
 
         if not Sheeld.is_not_shield:
             sheelds.update(bird)
