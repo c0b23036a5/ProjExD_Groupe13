@@ -117,25 +117,25 @@ class Life(pg.sprite.Sprite):
     def __init__(self, initial_lives: int):
         """
         こうかとん画像Surfaceを生成する
-        引数1 initial_lives：
+        引数1 initial_lives:初期値
         """
         self.lives = initial_lives #初期ライフというだけ
-        self.life_image = pg.image.load("fig/koukaton_life.png")
-        self.lost_life_image=pg.image.load("fig/lost_life.png")
-        self.neta_life=pg.image.load("fig/koukaton_buti.png")
+        self.life_image = pg.image.load("fig/koukaton_life.png") #赤いハート画像
+        self.lost_life_image=pg.image.load("fig/lost_life.png") #輝きを失ったハート画像
+        self.neta_life=pg.image.load("fig/koukaton_buti.png") #こうかとんカットイン画像
 
-    def lose_life(self):
+    def lose_life(self): #こうかとんのライフ減少を行う関数
         if self.lives > 0:
             self.lives -= 1
     
-    def draw(self, screen: pg.Surface):
+    def draw(self, screen: pg.Surface): #こうかとんのライフを表示する関数
         for i in range(3):
             if i < self.lives:
                 screen.blit(self.life_image, (10 + i * (self.life_image.get_width() + 10), 10))
             else:
                 screen.blit(self.lost_life_image, (10 + i * (self.life_image.get_width() + 10), 10))
 
-    def huzake(self, screen: pg.Surface):
+    def huzake(self, screen: pg.Surface): #こうかとんのカットインを表示する関数
         screen.blit(self.neta_life, (-300, 0))
     
 
@@ -465,10 +465,8 @@ def main():
             else:
                 touch_bomb[0].kill()    
                 bird.change_img(8, screen) # こうかとん悲しみエフェクト
-                
-                if life.lives != 1:
-                    life.huzake(screen)
-                
+                if life.lives != 1: #こうかとんの被弾カットインの条件：残りライフが１ではないとき
+                    life.huzake(screen) #被弾カットイン表示関数実行
                 score.update(screen)
                 pg.display.update()
                 time.sleep(0.4)
