@@ -506,7 +506,7 @@ def main():
                             print("hi_scoreを更新しました")
                             #ハイスコアの更新をお知らせ
                             font = pg.font.Font(None, 50)
-                            text2 = font.render(f"New High Score!  Score:{hi_score['local-hi-score']}", True, (255, 255, 255))
+                            text2 = font.render(f"New High Score!  Score:{hi_score['local-hi-score']} World-Score:{world_hi_score}", True, (255, 255, 255))
                             screen.blit(text2, (WIDTH/2-200, HEIGHT/2+50))
                             pg.display.update()
                             time.sleep(5)
@@ -515,7 +515,7 @@ def main():
                         print("hi_scoreを更新しませんでした")
                         #ハイスコアを表示する。
                         font = pg.font.Font(None, 50)
-                        text3 = font.render(f"Hi-Score: {hi_score['local-hi-score']}World:{world_hi_score}  Your-Score: {score.value}", True, (255, 255, 255))
+                        text3 = font.render(f"Hi-Score: {hi_score['local-hi-score']}World-Score:{world_hi_score}  Your-Score: {score.value}", True, (255, 255, 255))
                         screen.blit(text3, (WIDTH/2-200, HEIGHT/2+50))
                         pg.display.update()
                         time.sleep(5)
