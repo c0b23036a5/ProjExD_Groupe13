@@ -287,7 +287,7 @@ class Score:
     def __init__(self):
         self.font = pg.font.Font(None, 50)
         self.color = (0, 0, 255)
-        self.value = 0
+        self.value = 50
         self.image = self.font.render(f"Score: {self.value}", 0, self.color)
         self.rect = self.image.get_rect()
         self.rect.center = 100, HEIGHT-50
@@ -349,7 +349,7 @@ class Sheeld(pg.sprite.Sprite):
         # シールド展開中はFalse
         __class__.is_not_shield = False
 
-    def update(self, bird: Bird):
+    def update(self):
         #print(self.life)
         self.life -= 1
         if self.life < 0:
@@ -499,7 +499,7 @@ def main():
         gravity.update()
 
         if not Sheeld.is_not_shield:
-            sheelds.update(bird)
+            sheelds.update()
             sheelds.draw(screen)
         pg.display.update()
         tmr += 1
