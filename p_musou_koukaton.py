@@ -216,7 +216,7 @@ class Beam(pg.sprite.Sprite):
         self.rect.move_ip(self.speed*self.vx, self.speed*self.vy)
         if check_bound(self.rect) != (True, True):
             self.kill()
-        pg.mixer.Sound("fig/audio/ビーム発射音.mp3").play()
+        pg.mixer.Sound("fig/audio/ビーム発射音.mp3").play() #ビーム発射音の再生
         
 
 '''
@@ -261,7 +261,7 @@ class Explosion(pg.sprite.Sprite):
         if self.life < 0:
             self.kill()
 
-        pg.mixer.Sound("fig/audio/爆発4.mp3").play()
+        pg.mixer.Sound("fig/audio/爆発4.mp3").play() #爆発音の追加
 
 
 class Enemy(pg.sprite.Sprite):
