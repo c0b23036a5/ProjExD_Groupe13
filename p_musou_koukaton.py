@@ -9,6 +9,18 @@ import pygame as pg
 WIDTH, HEIGHT = 1600, 900  # ゲームウィンドウの幅，高さ
 os.chdir(os.path.dirname(os.path.abspath(__file__)))
 
+def m_play1():
+    #通常BGM
+    pg.mixer.init()
+    pg.mixer.music.load("fig/audio/炎の挑戦.mp3")
+    pg.mixer.music.play(-1)
+
+def m_play2():
+    #ゲームオーバーBGM
+    pg.mixer.music.stop()
+    pg.mixer.init()
+    pg.mixer.music.load("fig/audio/絶望の淵から.mp3")
+    pg.mixer.music.play(1)
 
 def check_bound(obj_rct:pg.Rect) -> tuple[bool, bool]:
     """
@@ -34,6 +46,36 @@ def calc_orientation(org: pg.Rect, dst: pg.Rect) -> tuple[float, float]:
     x_diff, y_diff = dst.centerx-org.centerx, dst.centery-org.centery
     norm = math.sqrt(x_diff**2+y_diff**2)
     return x_diff/norm, y_diff/norm
+
+'''
+class MusicPlayer:
+    """
+    音楽を再生するクラス
+    """
+    def __init__(self):
+        pg.init()
+        pg.mixer.init()
+        self.paused = False
+
+    def play_music(self, file_path):
+        try:
+            pg.mixer.music.load(file_path)
+            pg.mixer.music.play(loops = -1)
+        except Exception as e:
+            print("Error:", e)
+
+    def stop_music(self):
+        pg.mixer.music.stop()
+    
+    def pause_music(self):
+        pg.mixer.music.pause()
+        self.paused = True
+
+    def unpause_music(self):
+        pg.mixer.music.unpause()
+        self.paused = False
+'''
+
 
 
 class Bird(pg.sprite.Sprite):
@@ -329,14 +371,14 @@ class Sheeld(pg.sprite.Sprite):
         
 
 def main():
-
-
+    m_play1()
     pg.display.set_caption("真！こうかとん無双")
     screen = pg.display.set_mode((WIDTH, HEIGHT))
     bg_img = pg.image.load(f"fig/pg_bg.jpg")
     score = Score()
     #neobeam = NeoBeam 
     #score.value =900000000
+
 
     bird = Bird(3, (900, 400))
     bombs = pg.sprite.Group()
@@ -432,11 +474,12 @@ def main():
                 score.value += 1  # 1点アップ
                 touch_bomb[0].kill()
             else:
+                m_play2()
                 touch_bomb[0].kill()    
                 bird.change_img(8, screen) # こうかとん悲しみエフェクト
                 score.update(screen)
                 pg.display.update()
-                time.sleep(2)
+                time.sleep(10)
                 return
 
         bird.update(key_lst, screen)
@@ -458,7 +501,6 @@ def main():
         pg.display.update()
         tmr += 1
         clock.tick(50)
-
 
 if __name__ == "__main__":
     pg.init()
