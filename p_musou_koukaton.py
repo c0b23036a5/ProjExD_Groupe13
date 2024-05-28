@@ -689,6 +689,12 @@ def main():
                             font = pg.font.Font(None, 50)
                             text3 = font.render(f"Hi-Score: {hi_score['local-hi-score']}World-Score:{world_hi_score}  Your-Score: {score.value}", True, (255, 255, 255))
                             screen.blit(text3, (WIDTH/2-200, HEIGHT/2+50))
+                            #world_hi_scoreをjsonファイルに保存
+                            with open("score.json", "w") as f:
+                                hi_score["world-hi-score"] = world_hi_score
+                                json.dump(hi_score, f)
+                                print("world_hi_scoreを更新しました")
+
                             pg.display.update()
                             time.sleep(5)
 
