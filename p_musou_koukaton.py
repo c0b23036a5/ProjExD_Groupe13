@@ -17,6 +17,24 @@ from firebase_admin import firestore
 WIDTH, HEIGHT = 1600, 900  # ゲームウィンドウの幅，高さ
 os.chdir(os.path.dirname(os.path.abspath(__file__)))
 
+def m_play1():
+    """
+    炎の挑戦：通常時流すBGM
+    load:音楽ファイルの読み込み
+    play:ループ再生
+    """
+
+     
+    pg.mixer.init()
+    pg.mixer.music.load("fig/audio/炎の挑戦.mp3")
+    pg.mixer.music.play(-1)
+
+def m_play2():
+    #ゲームオーバーBGM
+    pg.mixer.music.stop()
+    pg.mixer.init()
+    pg.mixer.music.load("fig/audio/絶望の淵から.mp3")
+    pg.mixer.music.play(1)
 
 def check_bound(obj_rct:pg.Rect) -> tuple[bool, bool]:
     """
@@ -42,6 +60,36 @@ def calc_orientation(org: pg.Rect, dst: pg.Rect) -> tuple[float, float]:
     x_diff, y_diff = dst.centerx-org.centerx, dst.centery-org.centery
     norm = math.sqrt(x_diff**2+y_diff**2)
     return x_diff/norm, y_diff/norm
+
+'''
+class MusicPlayer:
+    """
+    音楽を再生するクラス
+    """
+    def __init__(self):
+        pg.init()
+        pg.mixer.init()
+        self.paused = False
+
+    def play_music(self, file_path):
+        try:
+            pg.mixer.music.load(file_path)
+            pg.mixer.music.play(loops = -1)
+        except Exception as e:
+            print("Error:", e)
+
+    def stop_music(self):
+        pg.mixer.music.stop()
+    
+    def pause_music(self):
+        pg.mixer.music.pause()
+        self.paused = True
+
+    def unpause_music(self):
+        pg.mixer.music.unpause()
+        self.paused = False
+'''
+
 
 
 class Bird(pg.sprite.Sprite):
@@ -212,6 +260,8 @@ class Beam(pg.sprite.Sprite):
         self.rect.move_ip(self.speed*self.vx, self.speed*self.vy)
         if check_bound(self.rect) != (True, True):
             self.kill()
+        pg.mixer.Sound("fig/audio/ビーム発射音.mp3").play() #ビーム発射音の再生
+        
 
 '''
 Beamを複数つくる弾幕クラス
@@ -254,6 +304,8 @@ class Explosion(pg.sprite.Sprite):
         self.image = self.imgs[self.life//10%2]
         if self.life < 0:
             self.kill()
+
+        pg.mixer.Sound("fig/audio/爆発4.mp3").play() #爆発音の追加
 
 
 class Enemy(pg.sprite.Sprite):
@@ -386,8 +438,7 @@ def firebase_upload(cred, score,name):
     
 
 def main():
-
-
+    m_play1()
     #firebaseの初期化
     cred = credentials.Certificate("firebase.json")
     firebase_admin.initialize_app(cred)
@@ -495,15 +546,19 @@ def main():
                 score.value += 1  # 1点アップ
                 touch_bomb[0].kill()
             else:
-                
                 touch_bomb[0].kill()    
                 bird.change_img(8, screen) # こうかとん悲しみエフェクト
                 score.update(screen)
                 pg.display.update()
+                
+
+
                 time.sleep(0.4)
                 life.lose_life() #こうかとんのライフが一つ減る
                 if life.lives == 0: #こうかとんのライフが0ならば
+                    m_play2()
                     time.sleep(2) #2秒待つ
+                
 
                     #ゲーむオーバー画面を実装
                     screen.fill((0, 0, 0))
@@ -577,7 +632,6 @@ def main():
         pg.display.update()
         tmr += 1
         clock.tick(50)
-
 
 if __name__ == "__main__":
     pg.init()
