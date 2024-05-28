@@ -8,7 +8,7 @@ import pygame as pg
 
 WIDTH, HEIGHT = 1600, 900  # ゲームウィンドウの幅，高さ
 os.chdir(os.path.dirname(os.path.abspath(__file__)))
-FLG_Hard=True  #ハードモードフラグ
+FLG_Hard=False  #ハードモードフラグ
 
 def check_bound(obj_rct:pg.Rect) -> tuple[bool, bool]:
     """
