@@ -447,6 +447,20 @@ class Sheeld(pg.sprite.Sprite):
         if self.life < 0:
             __class__.is_not_shield = True
             self.kill()
+
+
+class Bonus(pg.sprite.Sprite):
+    """
+    ボーナスアイテムを出現させるクラス
+    アイテムに触れるとスコア+100
+    """
+
+    def __init__(self,x:tuple):
+        super().__init__()
+        self.image = pg.image.load(f"fig/small_star7_yellow.png")    #画像Surfaceの定義
+        self.image=pg.transform.rotozoom(self.image,0,0.18)   #画像の大きさ調整
+        self.rect = self.image.get_rect()
+        self.rect.center = x
         
 
 def get_cloud_hi_score(cred):
@@ -482,7 +496,6 @@ def main():
     screen = pg.display.set_mode((WIDTH, HEIGHT))
     bg_img = pg.image.load(f"fig/pg_bg.jpg")
     score = Score()
-    #neobeam = NeoBeam 
     #score.value =900000000
 
     bird = Bird(3, (900, 400))
@@ -494,6 +507,7 @@ def main():
     gravity = pg.sprite.Group()
     sheelds = pg.sprite.Group()
     bosses = pg.sprite.Group()
+    bonus = pg.sprite.Group()
 
     tmr = 0
     clock = pg.time.Clock()
@@ -552,8 +566,17 @@ def main():
                 #停止状態になったらintervalに応じて爆弾投下
                 bombs.add(Bomb(boss,bird))
         for emy in pg.sprite.groupcollide(emys, beams, True, True).keys():
-            exps.add(Explosion(emy, 100))  # 爆発エフェクト
+            if random.randint(0,10) == 5:        # 10分1の確率で
+                bonus.add(Bonus(emy.rect.center))    #ボーナスアイテムを描画する
+            else:
+                exps.add(Explosion(emy, 100))  # 爆発エフェクト
             score.value += 10  # 10点アップ
+            
+            bird.change_img(6, screen)  # こうかとん喜びエフェクト
+
+        for boss in pg.sprite.groupcollide(bosses, beams, True, True).keys():
+            exps.add(Explosion(boss, 100))  # 爆発エフェクト
+            score.value += 50  # 50点アップ
             bird.change_img(6, screen)  # こうかとん喜びエフェクト
 
         for boss in pg.sprite.groupcollide(bosses, beams, True, True).keys():
@@ -573,8 +596,13 @@ def main():
         for bomb in pg.sprite.groupcollide(bombs, gravity, True, False).keys():
             exps.add(Explosion(bomb, 50))
             score.value += 1
+        bonus_item=pg.sprite.spritecollide(bird,bonus, False)
 
-        print(tmr)
+        if len(bonus_item) != 0 :    # ボーナスアイテムとこうかとんが衝突したら
+            score.value += 100       # スコア+100
+            bonus_item[0].kill()     # ボーナスアイテムを消す
+        
+        #print(tmr)
         
         # Cボタンを押すとシールドを展開
         #if key_lst[pg.K_c] & score.value >= 50:
@@ -681,6 +709,9 @@ def main():
         gravity.draw(screen)
         gravity.update()
         life.draw(screen)  # 残機を画面に表示
+
+        if len(bonus) != 0:
+            bonus.draw(screen)   # ボーナスアイテムの描画
 
         if not Sheeld.is_not_shield:
             sheelds.update()
