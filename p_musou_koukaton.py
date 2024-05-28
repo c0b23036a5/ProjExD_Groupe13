@@ -118,6 +118,35 @@ class Bird(pg.sprite.Sprite):
 
         screen.blit(self.image, self.rect)
 
+class Life(pg.sprite.Sprite):
+    """
+    こうかとんの残機に関するクラス
+    """
+    def __init__(self, initial_lives: int):
+        """
+        こうかとん画像Surfaceを生成する
+        引数1 initial_lives:初期値
+        """
+        self.lives = initial_lives #初期ライフというだけ
+        self.life_image = pg.image.load("fig/koukaton_life.png") #赤いハート画像
+        self.lost_life_image=pg.image.load("fig/lost_life.png") #輝きを失ったハート画像
+        self.neta_life=pg.image.load("fig/koukaton_buti.png") #こうかとんカットイン画像
+
+    def lose_life(self): #こうかとんのライフ減少を行う関数
+        if self.lives > 0:
+            self.lives -= 1
+    
+    def draw(self, screen: pg.Surface): #こうかとんのライフを表示する関数
+        for i in range(3):
+            if i < self.lives:
+                screen.blit(self.life_image, (10 + i * (self.life_image.get_width() + 10), 10))
+            else:
+                screen.blit(self.lost_life_image, (10 + i * (self.life_image.get_width() + 10), 10))
+    """
+    def huzake(self, screen: pg.Surface): #こうかとんのカットインを表示する関数
+        screen.blit(self.neta_life, (-300, 0))
+    """
+
 
 class Bomb(pg.sprite.Sprite):
     """
@@ -150,8 +179,9 @@ class Bomb(pg.sprite.Sprite):
         引数 screen：画面Surface
         """
         self.rect.move_ip(self.speed*self.vx, self.speed*self.vy)
-        if check_bound(self.rect) != (True, True):
+        if check_bound(self.rect) != (True, True) :
             self.kill()
+            
 
 
 class Beam(pg.sprite.Sprite):
@@ -371,6 +401,7 @@ def main():
     #score.value =900000000
 
     bird = Bird(3, (900, 400))
+    life = Life(3)  # こうかとんの残機を3に設定
     bombs = pg.sprite.Group()
     beams = pg.sprite.Group()
     exps = pg.sprite.Group()
@@ -464,63 +495,67 @@ def main():
                 score.value += 1  # 1点アップ
                 touch_bomb[0].kill()
             else:
+                
                 touch_bomb[0].kill()    
                 bird.change_img(8, screen) # こうかとん悲しみエフェクト
                 score.update(screen)
                 pg.display.update()
-                time.sleep(1)
+                time.sleep(0.4)
+                life.lose_life() #こうかとんのライフが一つ減る
+                if life.lives == 0: #こうかとんのライフが0ならば
+                    time.sleep(2) #2秒待つ
 
-                #ゲーむオーバー画面を実装
-                screen.fill((0, 0, 0))
-                font = pg.font.Font(None, 100)
-                text = font.render("Game Over", True, (255, 255, 255))
-                screen.blit(text, (WIDTH/2-200, HEIGHT/2-50))
+                    #ゲーむオーバー画面を実装
+                    screen.fill((0, 0, 0))
+                    font = pg.font.Font(None, 100)
+                    text = font.render("Game Over", True, (255, 255, 255))
+                    screen.blit(text, (WIDTH/2-200, HEIGHT/2-50))
 
-                #score.jsonを読み込み　hi_scoreよりscore.valueが大きい場合はhi_scoreを更新
-                with open("score.json", "r") as f:
-                    hi_score = json.load(f)
-                    world_hi_score = get_cloud_hi_score(cred)
-                    
+                    #score.jsonを読み込み　hi_scoreよりscore.valueが大きい場合はhi_scoreを更新
+                    with open("score.json", "r") as f:
+                        hi_score = json.load(f)
+                        world_hi_score = get_cloud_hi_score(cred)
+                        
 
-                    if world_hi_score < score.value:
-                        with open("score.json","w") as f:
-                            hi_score["local-hi-score"] = score.value
-                            hi_score["world-hi-score"] = score.value
-                            json.dump(hi_score, f)
-                            print("hi_scoreを更新しました")
-                            #ハイスコアの更新をお知らせ
+                        if world_hi_score < score.value:
+                            with open("score.json","w") as f:
+                                hi_score["local-hi-score"] = score.value
+                                hi_score["world-hi-score"] = score.value
+                                json.dump(hi_score, f)
+                                print("hi_scoreを更新しました")
+                                #ハイスコアの更新をお知らせ
+                                font = pg.font.Font(None, 50)
+                                text2 = font.render(f"This is World Record!  Score:{hi_score['local-hi-score']}", True, (255, 255, 255))
+                                screen.blit(text2, (WIDTH/2-200, HEIGHT/2+50))
+                                pg.display.update()
+                                time.sleep(5)
+
+                                #firebaseにスコアをアップロード
+                                firebase_upload(cred, score.value,hi_score["player-name"])
+
+
+                        elif hi_score["local-hi-score"] < score.value:
+                            with open("score.json", "w") as f:
+                                hi_score["local-hi-score"] = score.value
+                                json.dump(hi_score, f)
+                                print("hi_scoreを更新しました")
+                                #ハイスコアの更新をお知らせ
+                                font = pg.font.Font(None, 50)
+                                text2 = font.render(f"New High Score!  Score:{hi_score['local-hi-score']} World-Score:{world_hi_score}", True, (255, 255, 255))
+                                screen.blit(text2, (WIDTH/2-200, HEIGHT/2+50))
+                                pg.display.update()
+                                time.sleep(5)
+
+                        else:
+                            print("hi_scoreを更新しませんでした")
+                            #ハイスコアを表示する。
                             font = pg.font.Font(None, 50)
-                            text2 = font.render(f"This is World Record!  Score:{hi_score['local-hi-score']}", True, (255, 255, 255))
-                            screen.blit(text2, (WIDTH/2-200, HEIGHT/2+50))
+                            text3 = font.render(f"Hi-Score: {hi_score['local-hi-score']}World-Score:{world_hi_score}  Your-Score: {score.value}", True, (255, 255, 255))
+                            screen.blit(text3, (WIDTH/2-200, HEIGHT/2+50))
                             pg.display.update()
                             time.sleep(5)
 
-                            #firebaseにスコアをアップロード
-                            firebase_upload(cred, score.value,hi_score["player-name"])
-
-
-                    elif hi_score["local-hi-score"] < score.value:
-                        with open("score.json", "w") as f:
-                            hi_score["local-hi-score"] = score.value
-                            json.dump(hi_score, f)
-                            print("hi_scoreを更新しました")
-                            #ハイスコアの更新をお知らせ
-                            font = pg.font.Font(None, 50)
-                            text2 = font.render(f"New High Score!  Score:{hi_score['local-hi-score']} World-Score:{world_hi_score}", True, (255, 255, 255))
-                            screen.blit(text2, (WIDTH/2-200, HEIGHT/2+50))
-                            pg.display.update()
-                            time.sleep(5)
-
-                    else:
-                        print("hi_scoreを更新しませんでした")
-                        #ハイスコアを表示する。
-                        font = pg.font.Font(None, 50)
-                        text3 = font.render(f"Hi-Score: {hi_score['local-hi-score']}World-Score:{world_hi_score}  Your-Score: {score.value}", True, (255, 255, 255))
-                        screen.blit(text3, (WIDTH/2-200, HEIGHT/2+50))
-                        pg.display.update()
-                        time.sleep(5)
-
-                return
+                    return
 
         bird.update(key_lst, screen)
         beams.update()
@@ -534,6 +569,7 @@ def main():
         score.update(screen)
         gravity.draw(screen)
         gravity.update()
+        life.draw(screen)  # 残機を画面に表示
 
         if not Sheeld.is_not_shield:
             sheelds.update(bird)
