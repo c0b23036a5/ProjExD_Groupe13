@@ -637,6 +637,7 @@ def main():
 
                 time.sleep(0.4)
                 life.lose_life() #こうかとんのライフが一つ減る
+                pg.mixer.Sound("fig/audio/nc301497_ガラス割れた音.mp3").play() #ハートが割れる音の再生
                 if life.lives == 0: #こうかとんのライフが0ならば
                     m_play2()
                     time.sleep(2) #2秒待つ
