@@ -35,6 +35,7 @@ def m_play2():
     pg.mixer.init()
     pg.mixer.music.load("fig/audio/絶望の淵から.mp3")
     pg.mixer.music.play(1)
+FLG_Hard=False  #ハードモードフラグ
 
 def check_bound(obj_rct:pg.Rect) -> tuple[bool, bool]:
     """
@@ -282,14 +283,18 @@ class Explosion(pg.sprite.Sprite):
     """
     爆発に関するクラス
     """
-    def __init__(self, obj: "Bomb|Enemy", life: int):
+    def __init__(self, obj: "Bomb|Enemy|BossEnemy", life: int):
         """
         爆弾が爆発するエフェクトを生成する
-        引数1 obj：爆発するBombまたは敵機インスタンス
+        引数1 obj：爆発するBombまたは敵機インスタンスまたはボス敵インスタンス
         引数2 life：爆発時間
         """
         super().__init__()
         img = pg.image.load(f"fig/explosion.gif")
+        
+        if type(obj) == BossEnemy:  #引数がボスの場合は爆発サイズをボスのサイズに合わせる
+            img=pg.transform.rotozoom(img,1,2.5)
+
         self.imgs = [img, pg.transform.flip(img, 1, 1)]
         self.image = self.imgs[0]
         self.rect = self.image.get_rect(center=obj.rect.center)
@@ -319,7 +324,7 @@ class Enemy(pg.sprite.Sprite):
         self.image = random.choice(__class__.imgs)
         self.rect = self.image.get_rect()
         self.rect.center = random.randint(0, WIDTH), 0
-        self.vy = +6
+        self.vy = random.randint(6,15)
         #self.bound = random.randint(50, int(HEIGHT/2))  # 停止位置
         self.bound = random.randint(50, int(HEIGHT/2))  # 停止位置
         self.state = "down"  # 降下状態or停止状態
@@ -336,17 +341,45 @@ class Enemy(pg.sprite.Sprite):
             self.state = "stop"
         self.rect.centery += self.vy
 
+class BossEnemy(pg.sprite.Sprite):
+    """
+    ボスエネミーを追加するクラス
+    """
+    imgs = [pg.image.load(f"fig/alien{i}.png") for i in range(1, 4)]
+    def __init__(self):
+        super().__init__()
+        self.image = random.choice(__class__.imgs)
+        self.image = pg.transform.rotozoom(self.image,0,2.5) #サイズ変更
+        self.rect = self.image.get_rect()
+        self.rect.center = random.randint(0, WIDTH), 0
+        self.vy = +6
+        #self.bound = random.randint(50, int(HEIGHT/2))  # 停止位置
+        self.bound = random.randint(50, int(HEIGHT/2))  # 停止位置
+        self.state = "down"  # 降下状態or停止状態
+        self.interval = random.randint(10, 30)  # 爆弾投下インターバル
+    
+    def update(self):
+        """
+        ボスエネミーを速度ベクトルself.vyに基づき移動（降下）させる
+        ランダムに決めた停止位置_boundまで降下したら，_stateを停止状態に変更する
+        引数 screen：画面Surface
+        """
+        if self.rect.centery > self.bound:
+            self.vy = 0
+            self.state = "stop"
+        self.rect.centery += self.vy
 
 class Score:
     """
     打ち落とした爆弾，敵機の数をスコアとして表示するクラス
     爆弾：1点
     敵機：10点
+    ボス:50点
     """
     def __init__(self):
         self.font = pg.font.Font(None, 50)
         self.color = (0, 0, 255)
-        self.value = 0
+        self.value = 50
         self.image = self.font.render(f"Score: {self.value}", 0, self.color)
         self.rect = self.image.get_rect()
         self.rect.center = 100, HEIGHT-50
@@ -408,7 +441,7 @@ class Sheeld(pg.sprite.Sprite):
         # シールド展開中はFalse
         __class__.is_not_shield = False
 
-    def update(self, bird: Bird):
+    def update(self):
         #print(self.life)
         self.life -= 1
         if self.life < 0:
@@ -444,6 +477,7 @@ def main():
     firebase_admin.initialize_app(cred)
 
 
+    global FLG_Hard #ハードモードフラグへのアクセス
     pg.display.set_caption("真！こうかとん無双")
     screen = pg.display.set_mode((WIDTH, HEIGHT))
     bg_img = pg.image.load(f"fig/pg_bg.jpg")
@@ -459,9 +493,11 @@ def main():
     emys = pg.sprite.Group()
     gravity = pg.sprite.Group()
     sheelds = pg.sprite.Group()
+    bosses = pg.sprite.Group()
 
     tmr = 0
     clock = pg.time.Clock()
+    Boss_count = 0 #ボスの出現回数
     while True:
         key_lst = pg.key.get_pressed()
         for event in pg.event.get():
@@ -486,7 +522,7 @@ def main():
                 bird.state = "hyper"    #無敵状態にする
                 score.value -= 100      #スコアを減らして５００フレーム分無敵にする
                 bird.hyper_life = 500
-
+        
         screen.blit(bg_img, [0, 0])
 
         if key_lst[pg.K_LSHIFT]:
@@ -494,17 +530,35 @@ def main():
         else:
             bird.speed = 10
 
-        if tmr%200 == 0:  # 200フレームに1回，敵機を出現させる
+        if tmr%100 == 0:  # 200フレームに1回，敵機を出現させる
             emys.add(Enemy())
+        if FLG_Hard or tmr > 20000: #ハードモードか20000フレーム経過したら
+            if tmr%200 == 0:    #ボスの出現率を早くする
+                bosses.add(BossEnemy())
+                Boss_count += 1    
+        else:
+            if tmr%1200 == 0 and Boss_count != 0:    # 1200フレームに１回、ボスを出現させる。さらに0フレーム時にボスを出現させないようにする
+                Boss_count += 0
+                bosses.add(BossEnemy())
+            elif Boss_count == 0:
+                Boss_count += 1
 
         for emy in emys:
             if emy.state == "stop" and tmr%emy.interval == 0:
                 # 敵機が停止状態に入ったら，intervalに応じて爆弾投下
                 bombs.add(Bomb(emy, bird))
-
+        for boss in bosses:
+            if tmr%boss.interval == 0:
+                #停止状態になったらintervalに応じて爆弾投下
+                bombs.add(Bomb(boss,bird))
         for emy in pg.sprite.groupcollide(emys, beams, True, True).keys():
             exps.add(Explosion(emy, 100))  # 爆発エフェクト
             score.value += 10  # 10点アップ
+            bird.change_img(6, screen)  # こうかとん喜びエフェクト
+
+        for boss in pg.sprite.groupcollide(bosses, beams, True, True).keys():
+            exps.add(Explosion(boss, 100))  # 爆発エフェクト
+            score.value += 50  # 50点アップ
             bird.change_img(6, screen)  # こうかとん喜びエフェクト
 
         for bomb in pg.sprite.groupcollide(bombs, beams, True, True).keys():
@@ -520,7 +574,7 @@ def main():
             exps.add(Explosion(bomb, 50))
             score.value += 1
 
-        
+        print(tmr)
         
         # Cボタンを押すとシールドを展開
         #if key_lst[pg.K_c] & score.value >= 50:
@@ -617,6 +671,8 @@ def main():
         beams.draw(screen)
         emys.update()
         emys.draw(screen)
+        bosses.update()
+        bosses.draw(screen)
         bombs.update()
         bombs.draw(screen)
         exps.update()
@@ -627,7 +683,7 @@ def main():
         life.draw(screen)  # 残機を画面に表示
 
         if not Sheeld.is_not_shield:
-            sheelds.update(bird)
+            sheelds.update()
             sheelds.draw(screen)
         pg.display.update()
         tmr += 1
