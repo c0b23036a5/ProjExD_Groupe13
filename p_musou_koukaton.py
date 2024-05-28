@@ -17,6 +17,25 @@ from firebase_admin import firestore
 WIDTH, HEIGHT = 1600, 900  # ゲームウィンドウの幅，高さ
 os.chdir(os.path.dirname(os.path.abspath(__file__)))
 
+def m_play1():
+    """
+    炎の挑戦：通常時流すBGM
+    load:音楽ファイルの読み込み
+    play:ループ再生
+    """
+
+     
+    pg.mixer.init()
+    pg.mixer.music.load("fig/audio/炎の挑戦.mp3")
+    pg.mixer.music.play(-1)
+
+def m_play2():
+    #ゲームオーバーBGM
+    pg.mixer.music.stop()
+    pg.mixer.init()
+    pg.mixer.music.load("fig/audio/絶望の淵から.mp3")
+    pg.mixer.music.play(1)
+FLG_Hard=False  #ハードモードフラグ
 
 def check_bound(obj_rct:pg.Rect) -> tuple[bool, bool]:
     """
@@ -42,6 +61,36 @@ def calc_orientation(org: pg.Rect, dst: pg.Rect) -> tuple[float, float]:
     x_diff, y_diff = dst.centerx-org.centerx, dst.centery-org.centery
     norm = math.sqrt(x_diff**2+y_diff**2)
     return x_diff/norm, y_diff/norm
+
+'''
+class MusicPlayer:
+    """
+    音楽を再生するクラス
+    """
+    def __init__(self):
+        pg.init()
+        pg.mixer.init()
+        self.paused = False
+
+    def play_music(self, file_path):
+        try:
+            pg.mixer.music.load(file_path)
+            pg.mixer.music.play(loops = -1)
+        except Exception as e:
+            print("Error:", e)
+
+    def stop_music(self):
+        pg.mixer.music.stop()
+    
+    def pause_music(self):
+        pg.mixer.music.pause()
+        self.paused = True
+
+    def unpause_music(self):
+        pg.mixer.music.unpause()
+        self.paused = False
+'''
+
 
 
 class Bird(pg.sprite.Sprite):
@@ -212,6 +261,8 @@ class Beam(pg.sprite.Sprite):
         self.rect.move_ip(self.speed*self.vx, self.speed*self.vy)
         if check_bound(self.rect) != (True, True):
             self.kill()
+        pg.mixer.Sound("fig/audio/ビーム発射音.mp3").play() #ビーム発射音の再生
+        
 
 '''
 Beamを複数つくる弾幕クラス
@@ -232,14 +283,18 @@ class Explosion(pg.sprite.Sprite):
     """
     爆発に関するクラス
     """
-    def __init__(self, obj: "Bomb|Enemy", life: int):
+    def __init__(self, obj: "Bomb|Enemy|BossEnemy", life: int):
         """
         爆弾が爆発するエフェクトを生成する
-        引数1 obj：爆発するBombまたは敵機インスタンス
+        引数1 obj：爆発するBombまたは敵機インスタンスまたはボス敵インスタンス
         引数2 life：爆発時間
         """
         super().__init__()
         img = pg.image.load(f"fig/explosion.gif")
+        
+        if type(obj) == BossEnemy:  #引数がボスの場合は爆発サイズをボスのサイズに合わせる
+            img=pg.transform.rotozoom(img,1,2.5)
+
         self.imgs = [img, pg.transform.flip(img, 1, 1)]
         self.image = self.imgs[0]
         self.rect = self.image.get_rect(center=obj.rect.center)
@@ -255,6 +310,8 @@ class Explosion(pg.sprite.Sprite):
         if self.life < 0:
             self.kill()
 
+        pg.mixer.Sound("fig/audio/爆発4.mp3").play() #爆発音の追加
+
 
 class Enemy(pg.sprite.Sprite):
     """
@@ -267,7 +324,7 @@ class Enemy(pg.sprite.Sprite):
         self.image = random.choice(__class__.imgs)
         self.rect = self.image.get_rect()
         self.rect.center = random.randint(0, WIDTH), 0
-        self.vy = +6
+        self.vy = random.randint(6,15)
         #self.bound = random.randint(50, int(HEIGHT/2))  # 停止位置
         self.bound = random.randint(50, int(HEIGHT/2))  # 停止位置
         self.state = "down"  # 降下状態or停止状態
@@ -284,17 +341,45 @@ class Enemy(pg.sprite.Sprite):
             self.state = "stop"
         self.rect.centery += self.vy
 
+class BossEnemy(pg.sprite.Sprite):
+    """
+    ボスエネミーを追加するクラス
+    """
+    imgs = [pg.image.load(f"fig/alien{i}.png") for i in range(1, 4)]
+    def __init__(self):
+        super().__init__()
+        self.image = random.choice(__class__.imgs)
+        self.image = pg.transform.rotozoom(self.image,0,2.5) #サイズ変更
+        self.rect = self.image.get_rect()
+        self.rect.center = random.randint(0, WIDTH), 0
+        self.vy = +6
+        #self.bound = random.randint(50, int(HEIGHT/2))  # 停止位置
+        self.bound = random.randint(50, int(HEIGHT/2))  # 停止位置
+        self.state = "down"  # 降下状態or停止状態
+        self.interval = random.randint(10, 30)  # 爆弾投下インターバル
+    
+    def update(self):
+        """
+        ボスエネミーを速度ベクトルself.vyに基づき移動（降下）させる
+        ランダムに決めた停止位置_boundまで降下したら，_stateを停止状態に変更する
+        引数 screen：画面Surface
+        """
+        if self.rect.centery > self.bound:
+            self.vy = 0
+            self.state = "stop"
+        self.rect.centery += self.vy
 
 class Score:
     """
     打ち落とした爆弾，敵機の数をスコアとして表示するクラス
     爆弾：1点
     敵機：10点
+    ボス:50点
     """
     def __init__(self):
         self.font = pg.font.Font(None, 50)
         self.color = (0, 0, 255)
-        self.value = 0
+        self.value = 50
         self.image = self.font.render(f"Score: {self.value}", 0, self.color)
         self.rect = self.image.get_rect()
         self.rect.center = 100, HEIGHT-50
@@ -356,12 +441,26 @@ class Sheeld(pg.sprite.Sprite):
         # シールド展開中はFalse
         __class__.is_not_shield = False
 
-    def update(self, bird: Bird):
+    def update(self):
         #print(self.life)
         self.life -= 1
         if self.life < 0:
             __class__.is_not_shield = True
             self.kill()
+
+
+class Bonus(pg.sprite.Sprite):
+    """
+    ボーナスアイテムを出現させるクラス
+    アイテムに触れるとスコア+100
+    """
+
+    def __init__(self,x:tuple):
+        super().__init__()
+        self.image = pg.image.load(f"fig/small_star7_yellow.png")    #画像Surfaceの定義
+        self.image=pg.transform.rotozoom(self.image,0,0.18)   #画像の大きさ調整
+        self.rect = self.image.get_rect()
+        self.rect.center = x
         
 
 def get_cloud_hi_score(cred):
@@ -386,18 +485,17 @@ def firebase_upload(cred, score,name):
     
 
 def main():
-
-
+    m_play1()
     #firebaseの初期化
     cred = credentials.Certificate("firebase.json")
     firebase_admin.initialize_app(cred)
 
 
+    global FLG_Hard #ハードモードフラグへのアクセス
     pg.display.set_caption("真！こうかとん無双")
     screen = pg.display.set_mode((WIDTH, HEIGHT))
     bg_img = pg.image.load(f"fig/pg_bg.jpg")
     score = Score()
-    #neobeam = NeoBeam 
     #score.value =900000000
 
     bird = Bird(3, (900, 400))
@@ -408,9 +506,12 @@ def main():
     emys = pg.sprite.Group()
     gravity = pg.sprite.Group()
     sheelds = pg.sprite.Group()
+    bosses = pg.sprite.Group()
+    bonus = pg.sprite.Group()
 
     tmr = 0
     clock = pg.time.Clock()
+    Boss_count = 0 #ボスの出現回数
     while True:
         key_lst = pg.key.get_pressed()
         for event in pg.event.get():
@@ -435,7 +536,7 @@ def main():
                 bird.state = "hyper"    #無敵状態にする
                 score.value -= 100      #スコアを減らして５００フレーム分無敵にする
                 bird.hyper_life = 500
-
+        
         screen.blit(bg_img, [0, 0])
 
         if key_lst[pg.K_LSHIFT]:
@@ -443,17 +544,44 @@ def main():
         else:
             bird.speed = 10
 
-        if tmr%200 == 0:  # 200フレームに1回，敵機を出現させる
+        if tmr%100 == 0:  # 200フレームに1回，敵機を出現させる
             emys.add(Enemy())
+        if FLG_Hard or tmr > 20000: #ハードモードか20000フレーム経過したら
+            if tmr%200 == 0:    #ボスの出現率を早くする
+                bosses.add(BossEnemy())
+                Boss_count += 1    
+        else:
+            if tmr%1200 == 0 and Boss_count != 0:    # 1200フレームに１回、ボスを出現させる。さらに0フレーム時にボスを出現させないようにする
+                Boss_count += 0
+                bosses.add(BossEnemy())
+            elif Boss_count == 0:
+                Boss_count += 1
 
         for emy in emys:
             if emy.state == "stop" and tmr%emy.interval == 0:
                 # 敵機が停止状態に入ったら，intervalに応じて爆弾投下
                 bombs.add(Bomb(emy, bird))
-
+        for boss in bosses:
+            if tmr%boss.interval == 0:
+                #停止状態になったらintervalに応じて爆弾投下
+                bombs.add(Bomb(boss,bird))
         for emy in pg.sprite.groupcollide(emys, beams, True, True).keys():
-            exps.add(Explosion(emy, 100))  # 爆発エフェクト
+            if random.randint(0,10) == 5:        # 10分1の確率で
+                bonus.add(Bonus(emy.rect.center))    #ボーナスアイテムを描画する
+            else:
+                exps.add(Explosion(emy, 100))  # 爆発エフェクト
             score.value += 10  # 10点アップ
+            
+            bird.change_img(6, screen)  # こうかとん喜びエフェクト
+
+        for boss in pg.sprite.groupcollide(bosses, beams, True, True).keys():
+            exps.add(Explosion(boss, 100))  # 爆発エフェクト
+            score.value += 50  # 50点アップ
+            bird.change_img(6, screen)  # こうかとん喜びエフェクト
+
+        for boss in pg.sprite.groupcollide(bosses, beams, True, True).keys():
+            exps.add(Explosion(boss, 100))  # 爆発エフェクト
+            score.value += 50  # 50点アップ
             bird.change_img(6, screen)  # こうかとん喜びエフェクト
 
         for bomb in pg.sprite.groupcollide(bombs, beams, True, True).keys():
@@ -468,8 +596,13 @@ def main():
         for bomb in pg.sprite.groupcollide(bombs, gravity, True, False).keys():
             exps.add(Explosion(bomb, 50))
             score.value += 1
+        bonus_item=pg.sprite.spritecollide(bird,bonus, False)
 
+        if len(bonus_item) != 0 :    # ボーナスアイテムとこうかとんが衝突したら
+            score.value += 100       # スコア+100
+            bonus_item[0].kill()     # ボーナスアイテムを消す
         
+        #print(tmr)
         
         # Cボタンを押すとシールドを展開
         #if key_lst[pg.K_c] & score.value >= 50:
@@ -495,15 +628,20 @@ def main():
                 score.value += 1  # 1点アップ
                 touch_bomb[0].kill()
             else:
-                
                 touch_bomb[0].kill()    
                 bird.change_img(8, screen) # こうかとん悲しみエフェクト
                 score.update(screen)
                 pg.display.update()
+                
+
+
                 time.sleep(0.4)
                 life.lose_life() #こうかとんのライフが一つ減る
+                pg.mixer.Sound("fig/audio/nc301497_ガラス割れた音.mp3").play() #ハートが割れる音の再生
                 if life.lives == 0: #こうかとんのライフが0ならば
+                    m_play2()
                     time.sleep(2) #2秒待つ
+                
 
                     #ゲーむオーバー画面を実装
                     screen.fill((0, 0, 0))
@@ -552,6 +690,12 @@ def main():
                             font = pg.font.Font(None, 50)
                             text3 = font.render(f"Hi-Score: {hi_score['local-hi-score']}World-Score:{world_hi_score}  Your-Score: {score.value}", True, (255, 255, 255))
                             screen.blit(text3, (WIDTH/2-200, HEIGHT/2+50))
+                            #world_hi_scoreをjsonファイルに保存
+                            with open("score.json", "w") as f:
+                                hi_score["world-hi-score"] = world_hi_score
+                                json.dump(hi_score, f)
+                                print("world_hi_scoreを更新しました")
+
                             pg.display.update()
                             time.sleep(5)
 
@@ -562,6 +706,8 @@ def main():
         beams.draw(screen)
         emys.update()
         emys.draw(screen)
+        bosses.update()
+        bosses.draw(screen)
         bombs.update()
         bombs.draw(screen)
         exps.update()
@@ -571,13 +717,15 @@ def main():
         gravity.update()
         life.draw(screen)  # 残機を画面に表示
 
+        if len(bonus) != 0:
+            bonus.draw(screen)   # ボーナスアイテムの描画
+
         if not Sheeld.is_not_shield:
-            sheelds.update(bird)
+            sheelds.update()
             sheelds.draw(screen)
         pg.display.update()
         tmr += 1
         clock.tick(50)
-
 
 if __name__ == "__main__":
     pg.init()
