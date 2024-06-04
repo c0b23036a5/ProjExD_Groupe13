@@ -47,10 +47,10 @@
 ## import packs
 以下のパッケージを利用しています。
 
-math,os,random,sys,time,pygame,firebase_admin
+math,os,random,sys,time,pygame
 
 ```
-pip install math os random sys time pygame firebase_admin
+pip install math os random sys time pygame
 ```
 
 
