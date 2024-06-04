@@ -8,7 +8,7 @@ import pygame as pg
 import json
 import time
 
-import firebase_admin
+#import firebase_admin
 #from firebase_admin import credentials
 #from firebase_admin import firestore
 
