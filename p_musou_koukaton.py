@@ -8,7 +8,7 @@ import pygame as pg
 import json
 import time
 
-import firebase_admin
+#import firebase_admin
 #from firebase_admin import credentials
 #from firebase_admin import firestore
 
@@ -62,7 +62,7 @@ def calc_orientation(org: pg.Rect, dst: pg.Rect) -> tuple[float, float]:
     norm = math.sqrt(x_diff**2+y_diff**2)
     return x_diff/norm, y_diff/norm
 
-'''
+
 class MusicPlayer:
     """
     音楽を再生するクラス
@@ -89,7 +89,7 @@ class MusicPlayer:
     def unpause_music(self):
         pg.mixer.music.unpause()
         self.paused = False
-'''
+
 
 
 
@@ -480,9 +480,9 @@ def firebase_upload(cred, score,name):
         'user': name
     })
     print("アップロードしました")
-"""
 
-    
+
+"""
 
 def main():
     m_play1()
