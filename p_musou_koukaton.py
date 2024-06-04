@@ -9,8 +9,8 @@ import json
 import time
 
 import firebase_admin
-from firebase_admin import credentials
-from firebase_admin import firestore
+#from firebase_admin import credentials
+#from firebase_admin import firestore
 
 
 
@@ -462,7 +462,7 @@ class Bonus(pg.sprite.Sprite):
         self.rect = self.image.get_rect()
         self.rect.center = x
         
-
+"""
 def get_cloud_hi_score(cred):
     db = firestore.client()
     doc_ref = db.collection('score').get()
@@ -480,15 +480,15 @@ def firebase_upload(cred, score,name):
         'user': name
     })
     print("アップロードしました")
-
+"""
 
     
 
 def main():
     m_play1()
     #firebaseの初期化
-    cred = credentials.Certificate("firebase.json")
-    firebase_admin.initialize_app(cred)
+    #cred = credentials.Certificate("firebase.json")
+    #firebase_admin.initialize_app(cred)
 
 
     global FLG_Hard #ハードモードフラグへのアクセス
@@ -652,8 +652,8 @@ def main():
                     #score.jsonを読み込み　hi_scoreよりscore.valueが大きい場合はhi_scoreを更新
                     with open("score.json", "r") as f:
                         hi_score = json.load(f)
-                        world_hi_score = get_cloud_hi_score(cred)
-                        
+                        #world_hi_score = get_cloud_hi_score(cred)
+                        world_hi_score = 9999
 
                         if world_hi_score < score.value:
                             with open("score.json","w") as f:
@@ -669,7 +669,7 @@ def main():
                                 time.sleep(5)
 
                                 #firebaseにスコアをアップロード
-                                firebase_upload(cred, score.value,hi_score["player-name"])
+                                #firebase_upload(cred, score.value,hi_score["player-name"])
 
 
                         elif hi_score["local-hi-score"] < score.value:

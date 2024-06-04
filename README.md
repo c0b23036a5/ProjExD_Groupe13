@@ -1,7 +1,23 @@
-# ProjExD_Groupe13
+# P無双こうかとん
 
 ## 概要
-前回の授業で作成した鳥無双を改良する。
+真こうかとん無双を改良。（具体的なことは下に記載）
+
+
+## 実行環境の必要条件
+* python >= 3.10
+* pygame >= 2.1
+
+
+## How_To_Play
+矢印キーで鳥が動きます。
+スペースキーで射撃します。
+被弾するとHPが減ります３回被弾するとGameOverです
+1. L-Shift＋矢印で高速移動します。
+2. 左シフトで5連発射
+3. R-SHIFTで無敵　スコア50消費
+4. cキーでシールド展開　スコア50消費
+5. enterキーでグラビティ　スコア200消費
 
 ## 仕様を固めようそう！そう「しよう」（やったこと）
 1. ボス　（若林）
@@ -27,29 +43,20 @@
 7. jsonファイルに最高点を記載。ワールドレコードをクラウドにアップロード　（村田）
 ゲームオーバー時に最高得点も同時に表示する。
 最高点を更新したら誉める。
-
-## How_To_Play
-矢印キーで鳥が動きます。
-スペースキーで射撃します。
-被弾するとHPが減ります３回被弾するとGameOverです
-1. L-Shift＋矢印で高速移動します。
-2. 左シフトで5連発射
-3. R-SHIFTで無敵　スコア50消費
-4. cキーでシールド展開　スコア50消費
-5. enterキーでグラビティ　スコア200消費
-
        
 ## import packs
 以下のパッケージを利用しています。
 
-math,os,random,sys,time,pygame,firebase_admin
+math,os,random,sys,time,pygame
 
 ```
-pip install math os random sys time pygame firebase_admin
+pip install math os random sys time pygame
 ```
 
 
 ## 面白コーナー
+![koukaton_buti](https://github.com/Drkoukichi/ProjExD_Groupe13/assets/78055680/081d0c61-2a5e-45c9-9358-cc6d40606326)
+
 ![Untitled](https://github.com/Drkoukichi/ProjExD_Groupe13/assets/78055680/2424b605-cac8-495b-bc84-ffc7c7468cb6)
 
 
