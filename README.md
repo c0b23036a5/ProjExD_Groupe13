@@ -58,6 +58,7 @@ pip install math os random sys time pygame
 ![koukaton_buti](https://github.com/Drkoukichi/ProjExD_Groupe13/assets/78055680/081d0c61-2a5e-45c9-9358-cc6d40606326)
 
 ![Untitled](https://github.com/Drkoukichi/ProjExD_Groupe13/assets/78055680/2424b605-cac8-495b-bc84-ffc7c7468cb6)
+・著作者「ンバヂ」X（ https://x.com/nbaji9 ）
 
 
 
